@@ -17,23 +17,23 @@
  */
 package com.ancevt.util.isodir;
 
-public class DirectoryException extends RuntimeException{
-    public DirectoryException() {
+public class IsolatedDirectoryException extends RuntimeException{
+    public IsolatedDirectoryException() {
     }
 
-    public DirectoryException(String message) {
+    public IsolatedDirectoryException(String message) {
         super(message);
     }
 
-    public DirectoryException(String message, Throwable cause) {
+    public IsolatedDirectoryException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public DirectoryException(Throwable cause) {
+    public IsolatedDirectoryException(Throwable cause) {
         super(cause);
     }
 
-    public DirectoryException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    public IsolatedDirectoryException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

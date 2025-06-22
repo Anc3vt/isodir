@@ -8,15 +8,15 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.StringTokenizer;
 
-public class Directory {
+public class IsolatedDirectory {
 
     private final Path base;
 
-    public Directory(Path basePath) {
+    public IsolatedDirectory(Path basePath) {
         this.base = basePath;
     }
 
-    public Directory(String basePath) {
+    public IsolatedDirectory(String basePath) {
         this(Path.of(basePath));
     }
 
@@ -25,7 +25,7 @@ public class Directory {
             try {
                 Files.createDirectories(base);
             } catch (IOException e) {
-                throw new DirectoryException("Could not create baseDir", e);
+                throw new IsolatedDirectoryException("Could not create baseDir", e);
             }
         }
 
@@ -52,7 +52,7 @@ public class Directory {
         try {
             Files.deleteIfExists(path);
         } catch (IOException e) {
-            throw new DirectoryException("Could not delete", e);
+            throw new IsolatedDirectoryException("Could not delete", e);
         }
     }
 
@@ -73,7 +73,7 @@ public class Directory {
                 }
             });
         } catch (IOException e) {
-            throw new DirectoryException("Could not delete recursively", e);
+            throw new IsolatedDirectoryException("Could not delete recursively", e);
         }
     }
 
@@ -93,7 +93,7 @@ public class Directory {
             try {
                 Files.createDirectories(path);
             } catch (IOException e) {
-                throw new DirectoryException("Could not create subdirectories", e);
+                throw new IsolatedDirectoryException("Could not create subdirectories", e);
             }
         }
 
@@ -108,7 +108,7 @@ public class Directory {
         try {
             return Files.newInputStream(resolve(relativePath));
         } catch (IOException e) {
-            throw new DirectoryException("Could not read", e);
+            throw new IsolatedDirectoryException("Could not read", e);
         }
     }
 
@@ -120,7 +120,7 @@ public class Directory {
         try {
             return new String(read(relativePath).readAllBytes(), charsetName);
         } catch (IOException e) {
-            throw new DirectoryException("Could not read text", e);
+            throw new IsolatedDirectoryException("Could not read text", e);
         }
     }
 
@@ -128,7 +128,7 @@ public class Directory {
         try {
             return read(relativePath).readAllBytes();
         } catch (IOException e) {
-            throw new DirectoryException("Could not read bytes", e);
+            throw new IsolatedDirectoryException("Could not read bytes", e);
         }
     }
 
@@ -142,7 +142,7 @@ public class Directory {
                     StandardOpenOption.APPEND
             );
         } catch (IOException e) {
-            throw new DirectoryException("Could not write bytes", e);
+            throw new IsolatedDirectoryException("Could not write bytes", e);
 
         }
     }
@@ -151,7 +151,7 @@ public class Directory {
         try {
             appendBytes(relativePath, text.getBytes(charsetName));
         } catch (UnsupportedEncodingException e) {
-            throw new DirectoryException("Charset not supported", e);
+            throw new IsolatedDirectoryException("Charset not supported", e);
         }
     }
 
@@ -169,7 +169,7 @@ public class Directory {
                     StandardOpenOption.TRUNCATE_EXISTING
             );
         } catch (IOException e) {
-            throw new DirectoryException("Could not write bytes", e);
+            throw new IsolatedDirectoryException("Could not write bytes", e);
         }
     }
 
@@ -177,7 +177,7 @@ public class Directory {
         try {
             writeBytes(relativePath, text.getBytes(charsetName));
         } catch (UnsupportedEncodingException e) {
-            throw new DirectoryException("Charset not supported", e);
+            throw new IsolatedDirectoryException("Charset not supported", e);
         }
     }
 
@@ -189,22 +189,25 @@ public class Directory {
         try {
             return Files.newOutputStream(resolve(relativePath));
         } catch (IOException e) {
-            throw new DirectoryException("Could not write", e);
+            throw new IsolatedDirectoryException("Could not write", e);
         }
     }
 
-    public static Directory getLocal(Path path) {
-        return new Directory(OsUtils.getApplicationDataPath().resolve(path));
+    public static IsolatedDirectory getLocal(Path path) {
+        return new IsolatedDirectory(OsUtils.getApplicationDataPath().resolve(path));
+    }
+
+    public static IsolatedDirectory getLocal(String path) {
+        return getLocal(Path.of(path));
     }
 
     @Override
     public String toString() {
-        return new StringBuilder(this.getClass().getSimpleName())
-                .append("{")
-                .append("baseDir=")
-                .append(base)
-                .append('}')
-                .toString();
+        return this.getClass().getSimpleName() +
+                "{" +
+                "baseDir=" +
+                base +
+                '}';
     }
 
 

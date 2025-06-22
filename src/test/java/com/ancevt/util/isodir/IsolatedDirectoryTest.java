@@ -11,15 +11,15 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class DirectoryTest {
+class IsolatedDirectoryTest {
 
     private Path tempDir;
-    private Directory dir;
+    private IsolatedDirectory dir;
 
     @BeforeAll
     void setupAll() throws IOException {
         tempDir = Files.createTempDirectory("directory-test-" + UUID.randomUUID());
-        dir = new Directory(tempDir);
+        dir = new IsolatedDirectory(tempDir);
     }
 
     @AfterAll
@@ -99,9 +99,9 @@ class DirectoryTest {
     @Test
     void testReadNonexistentThrows() {
         String relPath = "no_such_file.txt";
-        assertThrows(DirectoryException.class, () -> dir.readText(relPath));
-        assertThrows(DirectoryException.class, () -> dir.readBytes(relPath));
-        assertThrows(DirectoryException.class, () -> dir.read(relPath));
+        assertThrows(IsolatedDirectoryException.class, () -> dir.readText(relPath));
+        assertThrows(IsolatedDirectoryException.class, () -> dir.readBytes(relPath));
+        assertThrows(IsolatedDirectoryException.class, () -> dir.read(relPath));
     }
 
     @Test
@@ -122,7 +122,7 @@ class DirectoryTest {
 
     @Test
     void testGetLocal() {
-        Directory localDir = Directory.getLocal(Path.of("unit-test"));
+        IsolatedDirectory localDir = IsolatedDirectory.getLocal(Path.of("unit-test"));
         assertNotNull(localDir);
         assertTrue(localDir.base().toString().contains("unit-test"));
     }
