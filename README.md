@@ -1,9 +1,7 @@
 # Isolated Directory Library
 
 
-[![Build](https://img.shields.io/github/actions/workflow/status/Anc3vt/isolated-directory/ci.yml?branch=main)](https://github.com/Anc3vt/isolated-directory/actions)
 [![License](https://img.shields.io/github/license/Anc3vt/isolated-directory)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Coverage](https://img.shields.io/codecov/c/github/Anc3vt/isolated-directory)](https://app.codecov.io/gh/Anc3vt/isolated-directory)
 
 
 > Simple, safe, cross-platform isolated file system utility for Java.
