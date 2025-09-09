@@ -5,7 +5,7 @@
 
     <groupId>com.ancevt.util</groupId>
     <artifactId>isolated-directory</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 
     <name>Ancevt Commons Library</name>
     <url>https://github.com/Anc3vt/isolated-directory</url>
