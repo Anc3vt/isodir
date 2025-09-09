@@ -1,129 +1,175 @@
 package com.ancevt.util.isodir;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
-import java.util.Comparator;
-import java.util.UUID;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@DisplayName("IsolatedDirectory Tests")
 class IsolatedDirectoryTest {
 
-    private Path tempDir;
-    private IsolatedDirectory dir;
+    @TempDir
+    Path tempDir;
 
-    @BeforeAll
-    void setupAll() throws IOException {
-        tempDir = Files.createTempDirectory("directory-test-" + UUID.randomUUID());
+    IsolatedDirectory dir;
+
+    @BeforeEach
+    void setUp() {
         dir = new IsolatedDirectory(tempDir);
     }
 
-    @AfterAll
-    void cleanupAll() throws IOException {
-        Files.walk(tempDir)
-                .sorted(Comparator.reverseOrder())
-                .forEach(path -> {
-                    try {
-                        Files.deleteIfExists(path);
-                    } catch (IOException ignored) {
-                    }
-                });
-    }
+    @Nested
+    @DisplayName("Read/Write Operations")
+    class ReadWriteTests {
 
-    @Test
-    void testWriteAndReadText() {
-        String relPath = "test.txt";
-        String content = "Привет, Directory!";
-        dir.writeText(relPath, content);
+        @Test
+        @DisplayName("should write and read text file")
+        void writeAndReadText() {
+            String relPath = "test.txt";
+            String content = "Hello, Directory!";
+            dir.writeText(relPath, content);
 
-        String read = dir.readText(relPath);
-        assertEquals(content, read);
-    }
-
-    @Test
-    void testWriteAndReadBytes() {
-        String relPath = "binfile.bin";
-        byte[] bytes = new byte[]{1, 2, 3, 4, 5};
-        dir.writeBytes(relPath, bytes);
-
-        byte[] read = dir.readBytes(relPath);
-        assertArrayEquals(bytes, read);
-    }
-
-    @Test
-    void testAppendTextAndBytes() {
-        String relPath = "append.txt";
-        dir.writeText(relPath, "abc");
-        dir.appendText(relPath, "def");
-        String result = dir.readText(relPath);
-        assertEquals("abcdef", result);
-
-        dir.writeBytes(relPath, "123".getBytes(StandardCharsets.UTF_8));
-        dir.appendBytes(relPath, "456".getBytes(StandardCharsets.UTF_8));
-        String result2 = dir.readText(relPath);
-        assertEquals("123456", result2);
-    }
-
-    @Test
-    void testExistsAndCreateDir() {
-        String subDir = "sub/dir";
-        assertFalse(dir.exists(subDir));
-        dir.createDir(subDir);
-        assertTrue(dir.exists(subDir));
-    }
-
-    @Test
-    void testDeleteFile() {
-        String relPath = "deleteMe.txt";
-        dir.writeText(relPath, "to delete");
-        assertTrue(dir.exists(relPath));
-        dir.delete(relPath);
-        assertFalse(dir.exists(relPath));
-    }
-
-    @Test
-    void testDeleteDir() {
-        String relDir = "folder/to/delete";
-        dir.createDir(relDir);
-        dir.writeText(relDir + "/file.txt", "data");
-        assertTrue(dir.exists(relDir + "/file.txt"));
-        dir.deleteDir("folder");
-        assertFalse(dir.exists(relDir + "/file.txt"));
-        assertFalse(dir.exists("folder"));
-    }
-
-    @Test
-    void testReadNonexistentThrows() {
-        String relPath = "no_such_file.txt";
-        assertThrows(IsolatedDirectoryException.class, () -> dir.readText(relPath));
-        assertThrows(IsolatedDirectoryException.class, () -> dir.readBytes(relPath));
-        assertThrows(IsolatedDirectoryException.class, () -> dir.read(relPath));
-    }
-
-    @Test
-    void testToStringWorks() {
-        assertNotNull(dir.toString());
-        assertTrue(dir.toString().contains("baseDir"));
-    }
-
-    @Test
-    void testCreateOutputStreamAndRead() throws IOException {
-        String relPath = "stream.txt";
-        try (var out = dir.createOutputStream(relPath)) {
-            out.write("stream-data".getBytes(StandardCharsets.UTF_8));
+            String read = dir.readText(relPath);
+            assertEquals(content, read);
         }
-        String result = dir.readText(relPath);
-        assertEquals("stream-data", result);
+
+        @Test
+        @DisplayName("should write and read bytes")
+        void writeAndReadBytes() {
+            String relPath = "binfile.bin";
+            byte[] bytes = {1, 2, 3, 4, 5};
+            dir.writeBytes(relPath, bytes);
+
+            byte[] read = dir.readBytes(relPath);
+            assertArrayEquals(bytes, read);
+        }
+
+        @Test
+        @DisplayName("should append text and bytes correctly")
+        void appendTextAndBytes() {
+            String relPath = "append.txt";
+
+            dir.writeText(relPath, "abc");
+            dir.appendText(relPath, "def");
+            assertEquals("abcdef", dir.readText(relPath));
+
+            dir.writeBytes(relPath, "123".getBytes(StandardCharsets.UTF_8));
+            dir.appendBytes(relPath, "456".getBytes(StandardCharsets.UTF_8));
+            assertEquals("123456", dir.readText(relPath));
+        }
+
+        @Test
+        @DisplayName("should overwrite or append via OutputStream")
+        void createOutputStreamTest() throws IOException {
+            String relPath = "stream.txt";
+
+            try (OutputStream out = dir.createOutputStream(relPath, true)) {
+                out.write("overwrite".getBytes(StandardCharsets.UTF_8));
+            }
+
+            try (OutputStream out = dir.createOutputStream(relPath, false)) {
+                out.write(" and append".getBytes(StandardCharsets.UTF_8));
+            }
+
+            String result = dir.readText(relPath);
+            assertEquals("overwrite and append", result);
+        }
+
+        @ParameterizedTest(name = "should handle charset = {0}")
+        @ValueSource(strings = {"UTF-8", "US-ASCII"})
+        void writeWithCharset(String charsetName) {
+            String relPath = "enc.txt";
+            String text = "hello";
+            dir.writeText(relPath, text, Charset.forName(charsetName));
+            String read = dir.readText(relPath, Charset.forName(charsetName));
+            assertEquals(text, read);
+        }
     }
 
-    @Test
-    void testGetLocal() {
-        IsolatedDirectory localDir = IsolatedDirectory.getLocal(Path.of("unit-test"));
-        assertNotNull(localDir);
-        assertTrue(localDir.base().toString().contains("unit-test"));
+    @Nested
+    @DisplayName("Directory and Existence Handling")
+    class DirectoryOps {
+
+        @Test
+        @DisplayName("should create subdirectories")
+        void createDirs() {
+            String subDir = "sub/dir";
+            assertFalse(dir.exists(subDir));
+            dir.createDir(subDir);
+            assertTrue(dir.exists(subDir));
+        }
+
+        @Test
+        @DisplayName("should delete single file")
+        void deleteFile() {
+            String relPath = "deleteMe.txt";
+            dir.writeText(relPath, "to delete");
+            assertTrue(dir.exists(relPath));
+            dir.delete(relPath);
+            assertFalse(dir.exists(relPath));
+        }
+
+        @Test
+        @DisplayName("should delete directory tree")
+        void deleteDirTree() {
+            String relDir = "folder/to/delete";
+            dir.createDir(relDir);
+            dir.writeText(relDir + "/file.txt", "data");
+            assertTrue(dir.exists(relDir + "/file.txt"));
+
+            dir.deleteDir("folder");
+            assertFalse(dir.exists("folder"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error Handling")
+    class ErrorCases {
+
+        @Test
+        @DisplayName("should throw on reading nonexistent file")
+        void readNonexistent() {
+            String relPath = "nope.txt";
+            assertThrows(IsolatedDirectoryException.class, () -> dir.readText(relPath));
+            assertThrows(IsolatedDirectoryException.class, () -> dir.readBytes(relPath));
+            assertThrows(IsolatedDirectoryException.class, () -> dir.read(relPath));
+        }
+
+        @Test
+        @DisplayName("should throw on path traversal")
+        void preventPathTraversal() {
+            assertThrows(IsolatedDirectoryException.class, () -> dir.writeText("../../evil.txt", "hack"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Utility")
+    class UtilityTests {
+
+        @Test
+        @DisplayName("should include baseDir in toString()")
+        void toStringIncludesPath() {
+            String out = dir.toString();
+            assertNotNull(out);
+            assertTrue(out.contains("baseDir"));
+        }
+
+        @Test
+        @DisplayName("should resolve local app path")
+        void getLocalAppPath() {
+            IsolatedDirectory local = IsolatedDirectory.getLocal("my-test");
+            assertTrue(local.base().toString().contains("my-test"));
+        }
     }
 }
