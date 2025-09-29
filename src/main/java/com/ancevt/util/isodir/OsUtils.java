@@ -36,7 +36,6 @@ final class OsUtils {
             case MACOS:
                 return Paths.get(userHome, "Library", "Application Support");
             case UNIX_LIKE:
-                // Стандарт XDG, если не задан XDG_DATA_HOME — ~/.local/share
                 String xdgDataHome = System.getenv("XDG_DATA_HOME");
                 if (xdgDataHome != null) return Paths.get(xdgDataHome);
                 return Paths.get(userHome, ".local", "share");
@@ -49,5 +48,5 @@ final class OsUtils {
         }
     }
 
-    private OsUtils() {} // Utility class, no instance.
+    private OsUtils() {} 
 }
