@@ -83,8 +83,18 @@ public class IsolatedDirectory {
             throw new IsolatedDirectoryException("Path traversal attempt: " + relativePath);
         }
 
+        try {
+            Path real = normalized.toRealPath(); // может бросить IOException, если файла нет
+            if (!real.startsWith(base.toRealPath())) {
+                throw new IsolatedDirectoryException("Real path escapes base: " + relativePath);
+            }
+        } catch (IOException e) {
+            throw new IsolatedDirectoryException(e);
+        }
+
         return normalized;
     }
+
 
     /**
      * Checks if a file or directory exists inside the base.
