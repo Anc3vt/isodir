@@ -45,7 +45,7 @@ Available via Maven Central:
 <dependency>
     <groupId>com.ancevt.util</groupId>
     <artifactId>isodir</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
