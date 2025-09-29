@@ -5,7 +5,7 @@
 
     <groupId>com.ancevt.util</groupId>
     <artifactId>isodir</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 
     <name>Isodir (Isolated Directory Library)</name>
     <description>A lightweight Java library that provides a sandboxed, isolated directory for safe file I/O — supporting secure path resolution, text/byte read-write, append, directory creation and recursive deletion, with utilities for OS-specific application data paths.</description>

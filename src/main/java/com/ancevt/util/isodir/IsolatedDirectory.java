@@ -74,17 +74,29 @@ public class IsolatedDirectory {
      */
     public Path resolve(String relativePath) {
         Path resolved = base();
+
         for (String token : relativePath.split("/")) {
-            if (!token.isEmpty()) resolved = resolved.resolve(token);
+            if (token.isEmpty() || token.equals(".")) continue;
+            if (token.equals("..")) {
+                throw new IsolatedDirectoryException("Path traversal attempt: " + relativePath);
+            }
+
+            resolved = resolved.resolve(token);
+
+            if (Files.isSymbolicLink(resolved)) {
+                throw new IsolatedDirectoryException("Symlink detected in path: " + resolved);
+            }
         }
+
         Path normalized = resolved.normalize();
 
         if (!normalized.startsWith(base)) {
-            throw new IsolatedDirectoryException("Path traversal attempt: " + relativePath);
+            throw new IsolatedDirectoryException("Resolved path escapes base: " + relativePath);
         }
 
         return normalized;
     }
+
 
     /**
      * Checks if a file or directory exists inside the base.
