@@ -4,18 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.ancevt.util</groupId>
-    <artifactId>isolated-directory</artifactId>
+    <artifactId>isodir</artifactId>
     <version>1.0.2</version>
 
-    <name>Ancevt Commons Library</name>
+    <name>Isolated Directory Library</name>
     <url>https://github.com/Anc3vt/isolated-directory</url>
-
-    <licenses>
-        <license>
-            <name>Apache License Version 2.0</name>
-            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
-        </license>
-    </licenses>
 
     <developers>
         <developer>
@@ -25,35 +18,31 @@
         </developer>
     </developers>
 
-    <distributionManagement>
-        <repository>
-            <id>ancevt</id>
-            <name>Ancevt packages repository</name>
-            <url>https://packages.ancevt.com/releases</url>
-        </repository>
-        <snapshotRepository>
-            <id>ancevt-snapshots</id>
-            <name>Ancevt packages repository (snapshots)</name>
-            <url>https://packages.ancevt.com/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
-    <repositories>
-        <repository>
-            <id>ancevt</id>
-            <url>https://packages.ancevt.com/releases</url>
-            <snapshots>
-                <updatePolicy>always</updatePolicy>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>ancevt-snapshot</id>
-            <url>https://packages.ancevt.com/snapshots</url>
-            <snapshots>
-                <updatePolicy>always</updatePolicy>
-            </snapshots>
-        </repository>
-    </repositories>
+    <scm>
+        <connection>scm:git:https://github.com/Anc3vt/ancevt-cli.git</connection>
+        <developerConnection>scm:git:git@github.com:Anc3vt/ancevt-cli.git</developerConnection>
+        <url>https://github.com/Anc3vt/ancevt-cli</url>
+    </scm>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>5.10.2</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -70,13 +59,11 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>${junit-jupiter-api.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>${junit-jupiter-params.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -121,4 +108,59 @@
             </plugin>
         </plugins>
     </build>
+
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.9.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.4.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals><goal>jar</goal></goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <encoding>UTF-8</encoding>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals><goal>sign</goal></goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
+
+        </project>
