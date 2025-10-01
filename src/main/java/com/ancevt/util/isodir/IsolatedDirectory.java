@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2025 Ancevt.
  * See the notice.md file distributed with this work for additional
  * information regarding copyright ownership.
@@ -61,7 +61,7 @@ public class IsolatedDirectory {
      * @param basePath base directory path as string
      */
     public IsolatedDirectory(String basePath) {
-        this(Path.of(basePath));
+        this(Paths.get(basePath));
     }
 
     /**
@@ -170,7 +170,7 @@ public class IsolatedDirectory {
         if (!Files.exists(path)) return;
 
         try {
-            Files.walkFileTree(path, new SimpleFileVisitor<>() {
+            Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     Files.deleteIfExists(file);
@@ -361,7 +361,7 @@ public class IsolatedDirectory {
      * @return new {@link IsolatedDirectory} instance
      */
     public static IsolatedDirectory getLocal(String relative) {
-        return getLocal(Path.of(relative));
+        return getLocal(Paths.get(relative));
     }
 
     @Override

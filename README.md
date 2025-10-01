@@ -1,5 +1,8 @@
 # IsolatedDirectory
 
+[![Maven Central](https://img.shields.io/maven-central/v/com.ancevt.util/isodir.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/com.ancevt.util/isodir)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 A lightweight, dependency-free Java library for safe and sandboxed file I/O operations.
 Originally built as a local storage layer for a game project, it provides a clean abstraction for creating, reading, writing, and deleting files and directories — all within a restricted base path.
 
@@ -45,7 +48,7 @@ Available via Maven Central:
 <dependency>
     <groupId>com.ancevt.util</groupId>
     <artifactId>isodir</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
@@ -85,6 +88,86 @@ if (!cache.exists("map_42.png")) {
 * OutputStreams default to overwrite mode unless specified.
 
 ---
+
+## 🧩 In-Memory Isolated Directory
+
+In addition to the real filesystem-backed `IsolatedDirectory`, this library also provides an **in-memory implementation**: `InMemoryIsolatedDirectory`.
+
+This variant simulates a sandboxed directory structure entirely in memory. It’s perfect for situations where persistence is not required, but the same API is desired.
+
+---
+
+### ✨ Features
+
+* **No Disk Writes**
+
+  * Everything lives in memory; nothing touches the real filesystem.
+* **Identical API**
+
+  * Implements the same methods as `IsolatedDirectory` (`writeBytes`, `readText`, `appendBytes`, etc.).
+* **Ephemeral**
+
+  * Data disappears once the instance is discarded.
+* **Debug-Friendly**
+
+  * Tree dump via `toString()` for quick inspection.
+
+---
+
+### 🚀 Use Cases
+
+#### 🧪 1. Unit Testing
+
+```java
+InMemoryIsolatedDirectory dir = new InMemoryIsolatedDirectory();
+dir.writeText("test/file.txt", "hello");
+assertEquals("hello", dir.readText("test/file.txt"));
+```
+
+No temp files. No cleanup headaches. Perfect for fast, isolated tests.
+
+#### ⚡ 2. Ephemeral Caches
+
+```java
+InMemoryIsolatedDirectory cache = new InMemoryIsolatedDirectory();
+cache.writeBytes("image.png", downloadedBytes);
+// Cache disappears when the app closes
+```
+
+Keep hot data close without ever writing to disk.
+
+#### 🛠️ 3. Prototyping File Logic
+
+```java
+InMemoryIsolatedDirectory proto = new InMemoryIsolatedDirectory();
+proto.writeText("config/settings.json", "{ \"debug\": true }");
+System.out.println(proto);
+```
+
+Quickly simulate directory structures while designing file-based APIs.
+
+---
+
+### 💾 Serialization Support
+
+`InMemoryIsolatedDirectory` can also **save/load snapshots**:
+
+* Save to a real directory on disk.
+* Save to a single binary file.
+* Load snapshots back into memory.
+
+This makes it possible to persist ephemeral states when needed.
+
+---
+
+### 🧠 When to Use
+
+* You want the *same* API as `IsolatedDirectory` but without touching disk.
+* You need quick, clean storage for tests, experiments, or caches.
+* You want to simulate complex directory trees without creating real files.
+
+> Think of it as a whiteboard for your filesystem: quick sketches, instant erasure.
+
 
 ## 🧠 Motivation
 

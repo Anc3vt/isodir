@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2025 Ancevt.
  * See the notice.md file distributed with this work for additional
  * information regarding copyright ownership.
