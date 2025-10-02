@@ -10,29 +10,29 @@ Originally built as a local storage layer for a game project, it provides a clea
 
 > Think of it as a little filesystem world where your app can live, save its progress, and never leak into the real one.
 
-## 📚 Table of Contents
+## Contents
 
-* [✨ Features](#-features)
-* [📦 Installation](#-installation)
-* [🚀 Use Cases](#-use-cases)
+* [ Features](#-features)
+* [ Installation](#-installation)
+* [ Use Cases](#-use-cases)
 
-  * [🎮 Game Save System](#-1-game-save-system)
-  * [⚙️ Config File Handling](#-2-config-file-handling)
-  * [📁 Dynamic Asset Caching](#-3-dynamic-asset-caching)
-* [❗ Safety by Design](#-safety-by-design)
-* [🧩 In-Memory Isolated Directory](#-in-memory-isolated-directory)
+  * [ Game Save System](#-1-game-save-system)
+  * [️ Config File Handling](#-2-config-file-handling)
+  * [ Dynamic Asset Caching](#-3-dynamic-asset-caching)
+* [ Safety by Design](#-safety-by-design)
+* [ In-Memory Isolated Directory](#-in-memory-isolated-directory)
 
-  * [✨ Features](#-features-1)
-  * [🚀 Use Cases](#-use-cases-1)
+  * [ Features](#-features-1)
+  * [ Use Cases](#-use-cases-1)
 
-    * [🧪 Unit Testing](#-1-unit-testing)
-    * [⚡ Ephemeral Caches](#-2-ephemeral-caches)
-    * [🛠️ Prototyping File Logic](#-3-prototyping-file-logic)
-  * [💾 Serialization Support](#-serialization-support)
-  * [🧠 When to Use](#-when-to-use)
-* [🧠 Motivation](#-motivation)
-* [📃 License](#-license)
-* [💬 Feedback & Contributions](#-feedback--contributions)
+    * [ Unit Testing](#-1-unit-testing)
+    * [ Ephemeral Caches](#-2-ephemeral-caches)
+    * [️ Prototyping File Logic](#-3-prototyping-file-logic)
+  * [ Serialization Support](#-serialization-support)
+  * [ When to Use](#-when-to-use)
+* [ Motivation](#-motivation)
+* [ License](#-license)
+* [ Feedback & Contributions](#-feedback--contributions)
 
 
 ---
@@ -67,7 +67,7 @@ Originally built as a local storage layer for a game project, it provides a clea
 
 ---
 
-## 📦 Installation
+##  Installation
 
 Available via Maven Central:
 
@@ -81,7 +81,7 @@ Available via Maven Central:
 
 ---
 
-## 🚀 Use Cases
+##  Use Cases
 
 ### 🎮 1. Game Save System
 
@@ -90,14 +90,14 @@ IsolatedDirectory saves = IsolatedDirectory.getLocal("my-game/saves");
 saves.writeText("slot1.json", saveDataJson);
 ```
 
-### ⚙️ 2. Config File Handling
+### ️ 2. Config File Handling
 
 ```java
 IsolatedDirectory configDir = new IsolatedDirectory("config");
 configDir.writeText("settings.ini", "volume=80\ndebug=true");
 ```
 
-### 📁 3. Dynamic Asset Caching
+###  3. Dynamic Asset Caching
 
 ```java
 IsolatedDirectory cache = new IsolatedDirectory("./.cache");
@@ -108,7 +108,7 @@ if (!cache.exists("map_42.png")) {
 ```
 ---
 
-## ❗ Safety by Design
+##  Safety by Design
 
 * All paths are resolved and normalized against the base.
 * Any attempt to escape the base directory throws an `IsolatedDirectoryException`.
@@ -116,7 +116,7 @@ if (!cache.exists("map_42.png")) {
 
 ---
 
-## 🧩 In-Memory Isolated Directory
+##  In-Memory Isolated Directory
 
 In addition to the real filesystem-backed `IsolatedDirectory`, this library also provides an **in-memory implementation**: `InMemoryIsolatedDirectory`.
 
@@ -124,7 +124,7 @@ This variant simulates a sandboxed directory structure entirely in memory. It’
 
 ---
 
-### ✨ Features
+###  Features
 
 * **No Disk Writes**
 
@@ -141,9 +141,9 @@ This variant simulates a sandboxed directory structure entirely in memory. It’
 
 ---
 
-### 🚀 Use Cases
+###  Use Cases
 
-#### 🧪 1. Unit Testing
+####  1. Unit Testing
 
 ```java
 InMemoryIsolatedDirectory dir = new InMemoryIsolatedDirectory();
@@ -153,7 +153,7 @@ assertEquals("hello", dir.readText("test/file.txt"));
 
 No temp files. No cleanup headaches. Perfect for fast, isolated tests.
 
-#### ⚡ 2. Ephemeral Caches
+####  2. Ephemeral Caches
 
 ```java
 InMemoryIsolatedDirectory cache = new InMemoryIsolatedDirectory();
@@ -163,7 +163,7 @@ cache.writeBytes("image.png", downloadedBytes);
 
 Keep hot data close without ever writing to disk.
 
-#### 🛠️ 3. Prototyping File Logic
+#### ️ 3. Prototyping File Logic
 
 ```java
 InMemoryIsolatedDirectory proto = new InMemoryIsolatedDirectory();
@@ -175,7 +175,7 @@ Quickly simulate directory structures while designing file-based APIs.
 
 ---
 
-### 💾 Serialization Support
+###  Serialization Support
 
 `InMemoryIsolatedDirectory` can also **save/load snapshots**:
 
@@ -187,7 +187,7 @@ This makes it possible to persist ephemeral states when needed.
 
 ---
 
-### 🧠 When to Use
+###  When to Use
 
 * You want the *same* API as `IsolatedDirectory` but without touching disk.
 * You need quick, clean storage for tests, experiments, or caches.
@@ -196,7 +196,7 @@ This makes it possible to persist ephemeral states when needed.
 > Think of it as a whiteboard for your filesystem: quick sketches, instant erasure.
 
 
-## 🧠 Motivation
+## Motivation
 
 Sometimes, all you need is a tiny, private world where your app can create and destroy files without worrying about where they're really going.
 
@@ -204,12 +204,12 @@ This library was built out of necessity — to give a game a place to live. Now 
 
 ---
 
-## 📃 License
+##  License
 
 Apache License 2.0
 
 ---
 
-## 💬 Feedback & Contributions
+##  Feedback & Contributions
 
 PRs and issues welcome. This lib is small, sharp, and opinionated. If you’re into that — let’s talk.
