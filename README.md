@@ -10,6 +10,31 @@ Originally built as a local storage layer for a game project, it provides a clea
 
 > Think of it as a little filesystem world where your app can live, save its progress, and never leak into the real one.
 
+## 📚 Table of Contents
+
+* [✨ Features](#-features)
+* [📦 Installation](#-installation)
+* [🚀 Use Cases](#-use-cases)
+
+  * [🎮 Game Save System](#-1-game-save-system)
+  * [⚙️ Config File Handling](#-2-config-file-handling)
+  * [📁 Dynamic Asset Caching](#-3-dynamic-asset-caching)
+* [❗ Safety by Design](#-safety-by-design)
+* [🧩 In-Memory Isolated Directory](#-in-memory-isolated-directory)
+
+  * [✨ Features](#-features-1)
+  * [🚀 Use Cases](#-use-cases-1)
+
+    * [🧪 Unit Testing](#-1-unit-testing)
+    * [⚡ Ephemeral Caches](#-2-ephemeral-caches)
+    * [🛠️ Prototyping File Logic](#-3-prototyping-file-logic)
+  * [💾 Serialization Support](#-serialization-support)
+  * [🧠 When to Use](#-when-to-use)
+* [🧠 Motivation](#-motivation)
+* [📃 License](#-license)
+* [💬 Feedback & Contributions](#-feedback--contributions)
+
+
 ---
 
 ## ✨ Features
