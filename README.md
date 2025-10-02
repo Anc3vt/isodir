@@ -2,6 +2,8 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.ancevt.util/isodir.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/com.ancevt.util/isodir)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![Java](https://img.shields.io/badge/Java-8%2B-brightgreen)
+![Build](https://img.shields.io/badge/build-passing-success)
 
 A lightweight, dependency-free Java library for safe and sandboxed file I/O operations.
 Originally built as a local storage layer for a game project, it provides a clean abstraction for creating, reading, writing, and deleting files and directories — all within a restricted base path.
