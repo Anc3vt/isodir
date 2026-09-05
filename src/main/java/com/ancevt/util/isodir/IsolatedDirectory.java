@@ -25,6 +25,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
 
 /**
@@ -311,6 +313,55 @@ public class IsolatedDirectory {
             return Files.newInputStream(resolve(relativePath));
         } catch (IOException e) {
             throw new IsolatedDirectoryException("Could not open input stream: " + relativePath, e);
+        }
+    }
+
+    /**
+     * Computes the SHA-256 digest of a file's raw contents.
+     *
+     * @param relativePath relative file path
+     * @return a new 32-byte SHA-256 digest
+     * @throws IsolatedDirectoryException if the file cannot be read
+     */
+    public byte[] sha256(String relativePath) {
+        MessageDigest digest = newSha256Digest();
+        byte[] buffer = new byte[8192];
+
+        try (InputStream input = read(relativePath)) {
+            int length;
+            while ((length = input.read(buffer)) != -1) {
+                digest.update(buffer, 0, length);
+            }
+            return digest.digest();
+        } catch (IOException e) {
+            throw new IsolatedDirectoryException("Could not compute SHA-256: " + relativePath, e);
+        }
+    }
+
+    /**
+     * Returns the raw file size without reading its contents into memory.
+     *
+     * @param relativePath relative file path
+     * @return size in bytes
+     * @throws IsolatedDirectoryException if the file size cannot be read
+     */
+    public long getSize(String relativePath) {
+        try {
+            Path path = resolve(relativePath);
+            if (!Files.isRegularFile(path)) {
+                throw new IsolatedDirectoryException("Path is not a regular file: " + relativePath);
+            }
+            return Files.size(path);
+        } catch (IOException e) {
+            throw new IsolatedDirectoryException("Could not read file size: " + relativePath, e);
+        }
+    }
+
+    private static MessageDigest newSha256Digest() {
+        try {
+            return MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 is not available", e);
         }
     }
 

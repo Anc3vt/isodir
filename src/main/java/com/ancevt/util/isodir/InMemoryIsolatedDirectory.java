@@ -139,6 +139,16 @@ public class InMemoryIsolatedDirectory extends IsolatedDirectory {
         return Arrays.copyOf(file.data, file.data.length);
     }
 
+    /** Returns the in-memory file size without copying its contents. */
+    @Override
+    public long getSize(String relativePath) {
+        Node node = resolveNode(relativePath, false);
+        if (!(node instanceof FileNode)) {
+            throw new IsolatedDirectoryException("File does not exist: " + relativePath);
+        }
+        return ((FileNode) node).data.length;
+    }
+
     /**
      * {@inheritDoc}
      * <p>
