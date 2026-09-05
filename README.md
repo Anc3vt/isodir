@@ -1,215 +1,161 @@
 # IsolatedDirectory
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.ancevt.util/isodir.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/com.ancevt.util/isodir)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 ![Java](https://img.shields.io/badge/Java-8%2B-brightgreen)
-![Build](https://img.shields.io/badge/build-passing-success)
 
-A lightweight, dependency-free Java library for safe and sandboxed file I/O operations.
-Originally built as a local storage layer for a game project, it provides a clean abstraction for creating, reading, writing, and deleting files and directories — all within a restricted base path.
+IsolatedDirectory (`isodir`) is a small, dependency-free Java library for file I/O scoped to a single base directory. It provides the same core storage operations for a real filesystem and an in-memory implementation, making application storage code easy to reuse in production and tests.
 
-> Think of it as a little filesystem world where your app can live, save its progress, and never leak into the real one.
+## Features
 
-## Contents
+- Resolves application paths relative to a fixed base directory.
+- Rejects `..` path traversal and symbolic links encountered while resolving a path.
+- Reads, writes, and appends bytes or UTF-8 text.
+- Exposes streaming input and output for large files.
+- Creates directories and supports single-path or recursive deletion.
+- Reports file size without loading the file into memory.
+- Computes SHA-256 incrementally and returns the 32-byte digest.
+- Locates an OS-specific application-data directory with `getLocal(...)`.
+- Includes an in-memory implementation with snapshot import/export support.
+- Requires Java 8 or newer and has no runtime dependencies.
 
-* [ Features](#-features)
-* [ Installation](#-installation)
-* [ Use Cases](#-use-cases)
+## Installation
 
-  * [ Game Save System](#-1-game-save-system)
-  * [️ Config File Handling](#-2-config-file-handling)
-  * [ Dynamic Asset Caching](#-3-dynamic-asset-caching)
-* [ Safety by Design](#-safety-by-design)
-* [ In-Memory Isolated Directory](#-in-memory-isolated-directory)
-
-  * [ Features](#-features-1)
-  * [ Use Cases](#-use-cases-1)
-
-    * [ Unit Testing](#-1-unit-testing)
-    * [ Ephemeral Caches](#-2-ephemeral-caches)
-    * [️ Prototyping File Logic](#-3-prototyping-file-logic)
-  * [ Serialization Support](#-serialization-support)
-  * [ When to Use](#-when-to-use)
-* [ Motivation](#-motivation)
-* [ License](#-license)
-* [ Feedback & Contributions](#-feedback--contributions)
-
-
----
-
-## ✨ Features
-
-* **Sandboxed Base Directory**
-
-    * All file operations are strictly scoped to a predefined base directory.
-    * Path traversal (`../../`) is explicitly blocked.
-
-* **Easy File I/O**
-
-    * `writeText`, `readBytes`, `appendText`, `createOutputStream`, etc.
-    * Overloads for charset-aware operations (UTF-8 by default).
-
-* **Automatic Directory Creation**
-
-    * Ensures intermediate directories exist before writing.
-
-* **Safe Deletion**
-
-    * Delete single files or recursively delete entire subdirectories.
-
-* **Platform-Aware Local Storage Path**
-
-    * `IsolatedDirectory.getLocal("my-game")` resolves to OS-specific app data folder.
-
-* **No external dependencies**
-
-    * Fully compatible with Java 8+
-
----
-
-##  Installation
-
-Available via Maven Central:
+The latest release available from Maven Central is `1.1.2`:
 
 ```xml
 <dependency>
     <groupId>com.ancevt.util</groupId>
     <artifactId>isodir</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.2</version>
 </dependency>
 ```
+## Quick start
 
----
+All operation paths are relative to the configured base directory:
 
-##  Use Cases
+```java
+import com.ancevt.util.isodir.IsolatedDirectory;
 
-### 🎮 1. Game Save System
+IsolatedDirectory storage = new IsolatedDirectory("data");
+storage.createDir("config");
+storage.createDir("logs");
+
+storage.writeText("config/settings.properties", "volume=80\n");
+storage.appendText("logs/latest.log", "Application started\n");
+
+String settings = storage.readText("config/settings.properties");
+byte[] contents = storage.readBytes("config/settings.properties");
+long size = storage.getSize("config/settings.properties");
+byte[] digest = storage.sha256("config/settings.properties");
+```
+
+Parent directories are not created automatically by file-writing methods. Create them explicitly before writing nested files.
+
+## Main API
+
+| Operation | Methods |
+| --- | --- |
+| Base and path handling | `base()`, `resolve(path)`, `getLocal(path)` |
+| Existence and directories | `exists(path)`, `createDir(path)` |
+| Byte I/O | `readBytes(path)`, `writeBytes(path, data)`, `appendBytes(path, data)` |
+| Text I/O | `readText(path)`, `writeText(path, text)`, `appendText(path, text)` |
+| Streaming I/O | `read(path)`, `createOutputStream(path[, overwrite])` |
+| File metadata | `getSize(path)`, `sha256(path)` |
+| Deletion | `delete(path)`, `deleteDir(path)` |
+
+Text methods use UTF-8 by default and also provide overloads accepting a `Charset`. `createOutputStream(path)` overwrites by default; pass `false` as the second argument to append.
+
+The caller owns streams returned by `read(...)` and `createOutputStream(...)` and must close them:
+
+```java
+try (InputStream input = storage.read("assets/map.bdf")) {
+    // Consume the file without allocating one array for the entire payload.
+}
+```
+
+## File size and SHA-256
+
+`getSize(path)` accepts regular files and returns their raw size in bytes. `sha256(path)` reads the file through a bounded buffer, so it is suitable for checking large cached assets.
+
+```java
+byte[] expectedHash = downloadMetadataHash();
+
+if (storage.exists("cache/map.bdf")
+        && storage.getSize("cache/map.bdf") > 0
+        && Arrays.equals(storage.sha256("cache/map.bdf"), expectedHash)) {
+    // The cached file matches the expected content.
+}
+```
+
+Both methods throw `IsolatedDirectoryException` when the target cannot be accessed. `getSize(...)` also rejects directories and other non-regular paths.
+
+## OS-specific local storage
+
+`getLocal(...)` creates an isolated view below the operating system's application-data location:
 
 ```java
 IsolatedDirectory saves = IsolatedDirectory.getLocal("my-game/saves");
-saves.writeText("slot1.json", saveDataJson);
+saves.writeText("slot-1.json", saveDataJson);
 ```
 
-### ️ 2. Config File Handling
+The resulting base is platform-dependent. Call `base()` when the concrete path is needed for diagnostics.
+
+## In-memory storage
+
+`InMemoryIsolatedDirectory` extends `IsolatedDirectory` and supports the same common read/write, streaming, size, hashing, and deletion operations without touching the filesystem:
 
 ```java
-IsolatedDirectory configDir = new IsolatedDirectory("config");
-configDir.writeText("settings.ini", "volume=80\ndebug=true");
+import com.ancevt.util.isodir.InMemoryIsolatedDirectory;
+
+InMemoryIsolatedDirectory storage = new InMemoryIsolatedDirectory();
+storage.createDir("profiles");
+storage.writeText("profiles/player.txt", "Player One");
+
+assert storage.getSize("profiles/player.txt") == 10;
+assert storage.readText("profiles/player.txt").equals("Player One");
 ```
 
-###  3. Dynamic Asset Caching
+This is useful for unit tests, temporary caches, and prototypes. Its `toString()` method prints the current directory tree for debugging.
+
+### In-memory snapshots
+
+An in-memory tree can be copied to or loaded from a real directory:
 
 ```java
-IsolatedDirectory cache = new IsolatedDirectory("./.cache");
-if (!cache.exists("map_42.png")) {
-    byte[] bytes = downloadFromServer();
-    cache.writeBytes("map_42.png", bytes);
-}
+storage.save(Paths.get("backup-directory"));
+storage.load(Paths.get("backup-directory"));
 ```
----
 
-##  Safety by Design
-
-* All paths are resolved and normalized against the base.
-* Any attempt to escape the base directory throws an `IsolatedDirectoryException`.
-* OutputStreams default to overwrite mode unless specified.
-
----
-
-##  In-Memory Isolated Directory
-
-In addition to the real filesystem-backed `IsolatedDirectory`, this library also provides an **in-memory implementation**: `InMemoryIsolatedDirectory`.
-
-This variant simulates a sandboxed directory structure entirely in memory. It’s perfect for situations where persistence is not required, but the same API is desired.
-
----
-
-###  Features
-
-* **No Disk Writes**
-
-  * Everything lives in memory; nothing touches the real filesystem.
-* **Identical API**
-
-  * Implements the same methods as `IsolatedDirectory` (`writeBytes`, `readText`, `appendBytes`, etc.).
-* **Ephemeral**
-
-  * Data disappears once the instance is discarded.
-* **Debug-Friendly**
-
-  * Tree dump via `toString()` for quick inspection.
-
----
-
-###  Use Cases
-
-####  1. Unit Testing
+It can also be serialized to one binary file and restored later:
 
 ```java
-InMemoryIsolatedDirectory dir = new InMemoryIsolatedDirectory();
-dir.writeText("test/file.txt", "hello");
-assertEquals("hello", dir.readText("test/file.txt"));
+storage.saveToFile(Paths.get("storage.snapshot"));
+storage.loadFromFile(Paths.get("storage.snapshot"));
 ```
 
-No temp files. No cleanup headaches. Perfect for fast, isolated tests.
+`load(...)` and `loadFromFile(...)` replace the current in-memory contents. Snapshot methods expose `IOException`, unlike normal storage operations, which wrap I/O failures in `IsolatedDirectoryException`.
 
-####  2. Ephemeral Caches
+## Safety model
 
-```java
-InMemoryIsolatedDirectory cache = new InMemoryIsolatedDirectory();
-cache.writeBytes("image.png", downloadedBytes);
-// Cache disappears when the app closes
+`IsolatedDirectory` normalizes its absolute base path and resolves every operation below it. A path containing a `..` segment is rejected, as is a path that encounters an existing symbolic link. Invalid paths and ordinary filesystem failures are reported as unchecked `IsolatedDirectoryException` instances.
+
+This is a narrow application-storage boundary, not a complete security sandbox for hostile code. In particular, callers can obtain the underlying base `Path`, and filesystem state can change concurrently between validation and an operation.
+
+## Building and testing
+
+```shell
+mvn clean test
 ```
 
-Keep hot data close without ever writing to disk.
+To install the current artifact locally for another Maven project:
 
-#### ️ 3. Prototyping File Logic
-
-```java
-InMemoryIsolatedDirectory proto = new InMemoryIsolatedDirectory();
-proto.writeText("config/settings.json", "{ \"debug\": true }");
-System.out.println(proto);
+```shell
+mvn clean install
 ```
 
-Quickly simulate directory structures while designing file-based APIs.
+## License
 
----
+Licensed under the [Apache License 2.0](LICENSE).
 
-###  Serialization Support
-
-`InMemoryIsolatedDirectory` can also **save/load snapshots**:
-
-* Save to a real directory on disk.
-* Save to a single binary file.
-* Load snapshots back into memory.
-
-This makes it possible to persist ephemeral states when needed.
-
----
-
-###  When to Use
-
-* You want the *same* API as `IsolatedDirectory` but without touching disk.
-* You need quick, clean storage for tests, experiments, or caches.
-* You want to simulate complex directory trees without creating real files.
-
-> Think of it as a whiteboard for your filesystem: quick sketches, instant erasure.
-
-
-## Motivation
-
-Sometimes, all you need is a tiny, private world where your app can create and destroy files without worrying about where they're really going.
-
-This library was built out of necessity — to give a game a place to live. Now it's here for you too.
-
----
-
-##  License
-
-Apache License 2.0
-
----
-
-##  Feedback & Contributions
-
-PRs and issues welcome. This lib is small, sharp, and opinionated. If you’re into that — let’s talk.
+Contributions and issue reports are welcome.
